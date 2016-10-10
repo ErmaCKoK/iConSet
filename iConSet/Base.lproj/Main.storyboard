@@ -691,9 +691,15 @@
                             <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="0JY-Vs-pyY">
                                 <rect key="frame" x="0.0" y="0.0" width="256" height="256"/>
                                 <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="ic_drag" id="Qkp-Kr-Mg4"/>
+                                <connections>
+                                    <binding destination="XfG-lQ-9wD" name="hidden" keyPath="self.isProcesing" id="WFk-KK-fIX"/>
+                                </connections>
                             </imageView>
                             <customView focusRingType="exterior" translatesAutoresizingMaskIntoConstraints="NO" id="geb-ZW-wxn" customClass="DragView" customModule="iConSet" customModuleProvider="target">
                                 <rect key="frame" x="0.0" y="0.0" width="256" height="256"/>
+                                <connections>
+                                    <binding destination="XfG-lQ-9wD" name="hidden" keyPath="self.isProcesing" id="Ikh-KI-GbR"/>
+                                </connections>
                             </customView>
                             <button translatesAutoresizingMaskIntoConstraints="NO" id="cEC-1m-P5u">
                                 <rect key="frame" x="9" y="262" width="61" height="18"/>
@@ -732,18 +738,28 @@
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                                 <connections>
-                                    <binding destination="XfG-lQ-9wD" name="displayPatternValue1" keyPath="self.jpgComresionValue" id="vKt-b0-Ihm">
-                                        <dictionary key="options">
-                                            <string key="NSDisplayPattern">%{value1}@</string>
-                                        </dictionary>
-                                    </binding>
                                     <binding destination="XfG-lQ-9wD" name="hidden" keyPath="self.isJPGResult" id="hAo-QA-o1f">
                                         <dictionary key="options">
                                             <string key="NSValueTransformerName">NSNegateBoolean</string>
                                         </dictionary>
                                     </binding>
+                                    <binding destination="XfG-lQ-9wD" name="displayPatternValue1" keyPath="self.jpgComresionValue" id="vKt-b0-Ihm">
+                                        <dictionary key="options">
+                                            <string key="NSDisplayPattern">%{value1}@</string>
+                                        </dictionary>
+                                    </binding>
                                 </connections>
                             </textField>
+                            <progressIndicator wantsLayer="YES" horizontalHuggingPriority="750" verticalHuggingPriority="750" maxValue="100" displayedWhenStopped="NO" bezeled="NO" indeterminate="YES" style="spinning" translatesAutoresizingMaskIntoConstraints="NO" id="K0R-Tk-7gz">
+                                <rect key="frame" x="112" y="112" width="32" height="32"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="32" id="a51-V2-gEK"/>
+                                    <constraint firstAttribute="height" constant="32" id="uhO-HI-gPk"/>
+                                </constraints>
+                                <connections>
+                                    <binding destination="XfG-lQ-9wD" name="animate" keyPath="self.isProcesing" id="6iM-Z6-TXo"/>
+                                </connections>
+                            </progressIndicator>
                         </subviews>
                         <constraints>
                             <constraint firstItem="7F6-n1-RgD" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" constant="11" id="1Pc-tS-twl"/>
@@ -759,11 +775,13 @@
                             <constraint firstItem="hd0-xz-Vaf" firstAttribute="centerY" secondItem="cEC-1m-P5u" secondAttribute="centerY" id="VnJ-JE-ktb"/>
                             <constraint firstAttribute="trailing" secondItem="geb-ZW-wxn" secondAttribute="trailing" id="XvH-je-feJ"/>
                             <constraint firstItem="7F6-n1-RgD" firstAttribute="top" secondItem="m2S-Jp-Qdl" secondAttribute="top" constant="8" id="bMi-pE-omV"/>
+                            <constraint firstItem="K0R-Tk-7gz" firstAttribute="centerX" secondItem="m2S-Jp-Qdl" secondAttribute="centerX" id="dUe-Pp-rmn"/>
                             <constraint firstItem="cEC-1m-P5u" firstAttribute="top" secondItem="7F6-n1-RgD" secondAttribute="bottom" constant="16" id="dqz-v1-CVY"/>
                             <constraint firstAttribute="trailing" secondItem="Lpk-hQ-7hh" secondAttribute="trailing" constant="11" id="kmM-t0-xeb"/>
                             <constraint firstItem="Lpk-hQ-7hh" firstAttribute="leading" secondItem="hd0-xz-Vaf" secondAttribute="trailing" constant="5" id="nfg-lL-Bbf"/>
                             <constraint firstAttribute="bottom" secondItem="0JY-Vs-pyY" secondAttribute="bottom" id="nzn-8c-EIX"/>
                             <constraint firstItem="geb-ZW-wxn" firstAttribute="top" secondItem="m2S-Jp-Qdl" secondAttribute="top" constant="60" id="pdR-sD-LSS"/>
+                            <constraint firstItem="K0R-Tk-7gz" firstAttribute="centerY" secondItem="geb-ZW-wxn" secondAttribute="centerY" id="qmd-My-EUK"/>
                         </constraints>
                     </view>
                     <connections>

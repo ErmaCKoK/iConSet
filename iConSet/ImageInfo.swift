@@ -13,6 +13,7 @@ class ImageInfo: NSObject {
     private var folder: String
     private var URL: NSURL
     private var imageSize: BitmapImageSize
+    private var isJPG: Bool
     
     var scale: Int
     
@@ -29,16 +30,18 @@ class ImageInfo: NSObject {
             let fileName = self.URL.name//.componentsSeparatedByString("_").last ?? "UNKNOW"
             
             let pref = scale == 1 ? "" : "@\(scale)x"
-            return folder.URLByAppendingPathComponent(self.folder)!.URLByAppendingPathComponent("\(fileName)\(pref).png")!
+            let typeFyle = self.isJPG ? "jpg" :"png"
+            return folder.URLByAppendingPathComponent(self.folder)!.URLByAppendingPathComponent("\(fileName)\(pref).\(typeFyle)")!
         }
     }
     
-    init(URL: NSURL, scale: Int, imageSize: BitmapImageSize, folder: String) {
+    init(URL: NSURL, scale: Int, imageSize: BitmapImageSize, folder: String, isJPG: Bool) {
         
         self.URL = URL
         self.scale = scale
         self.imageSize = imageSize
         self.folder = folder
+        self.isJPG = isJPG
         
         super.init()
     }
@@ -57,7 +60,6 @@ class ImageInfo: NSObject {
         
         sourceImage.size = size
         NSGraphicsContext.currentContext()?.imageInterpolation = NSImageInterpolation.High
-        
         
         sourceImage.drawInRect(rect, fromRect: NSZeroRect, operation: NSCompositingOperation.Copy, fraction: 1.0)
         

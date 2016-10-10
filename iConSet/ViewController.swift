@@ -22,16 +22,16 @@ class ViewController: NSViewController, DragViewDelegate {
     var info = [String: String]()
     var folder: NSURL?
     
+    dynamic var isProcesing: Bool = false
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         self.dragView.delegate = self
         // Do any additional setup after loading the view.
         
         NSLog("isCreateImageAssests: \(self.isCreateImageAssests) isJPGResult:  \(self.isJPGResult)")
-        
-        
     }
-
+    
     override var representedObject: AnyObject? {
         didSet {
         // Update the view, if already loaded.
@@ -63,19 +63,27 @@ class ViewController: NSViewController, DragViewDelegate {
             self.info[URL.name] = "\(originalSize.width):\(originalSize.height)"
             
             for index in 1...3 {
-                imagesInfo.append(ImageInfo(URL: URL, scale: index, imageSize: originalSize, folder: folderName))
+                imagesInfo.append(ImageInfo(URL: URL, scale: index, imageSize: originalSize, folder: folderName, isJPG: self.isJPGResult))
             }
 
+            var fileType = NSBitmapImageFileType.PNG
+            var properties = [NSImageInterlaced : NSNumber(bool: false)]
+            
+            if self.isJPGResult == true {
+                fileType = .JPEG2000
+                properties = [NSImageProgressive : NSNumber(bool: false), NSImageCompressionFactor: self.jpgComresionValue]
+            }
+            NSLog("self.isJPGResult \(self.isJPGResult) type: \(fileType) properties: \(properties)")
             for imageInfo in imagesInfo {
                 
                 let newImage = imageInfo.drawImage(image)
 
-                let data = newImage.TIFFRepresentation!
+                let targetColorSpace = NSColorSpace(CGColorSpace: CGColorSpaceCreateWithName(kCGColorSpaceSRGB)!)!
                 
-                let imageRepNew = NSBitmapImageRep(data: data)
+                let imageRepNew = NSBitmapImageRep(data: newImage.TIFFRepresentation!)?.bitmapImageRepByRetaggingWithColorSpace(targetColorSpace)
                 
-                let imageData = imageRepNew!.representationUsingType(NSBitmapImageFileType.PNG, properties: [NSImageInterlaced : NSNumber(bool: false)])
-//
+                let imageData = imageRepNew!.representationUsingType(fileType, properties: properties)
+                
                 imageData?.writeToURL(imageInfo.path, atomically: true)
             }
             
@@ -90,6 +98,12 @@ class ViewController: NSViewController, DragViewDelegate {
     }
     
     func dragView(dragView: DragView, didReciveURLs urls: [NSURL]) {
+        if self.isProcesing == true {
+            return
+        }
+        
+        self.isProcesing = true
+
         self.info.removeAll()
         self.folder = nil
         
@@ -98,11 +112,13 @@ class ViewController: NSViewController, DragViewDelegate {
             self.saveImagesBy(url)
         }
         
-        if let folder = self.folder {
-            let date = try! NSJSONSerialization.dataWithJSONObject(NSDictionary(dictionary:info), options: NSJSONWritingOptions.PrettyPrinted)
+//        if let folder = self.folder {
+//            let date = try! NSJSONSerialization.dataWithJSONObject(NSDictionary(dictionary:info), options: NSJSONWritingOptions.PrettyPrinted)
+//        
+//            date.writeToURL(folder.URLByDeletingLastPathComponent!.URLByAppendingPathComponent("Contents.json")!, atomically: true)
+//        }
         
-            date.writeToURL(folder.URLByDeletingLastPathComponent!.URLByAppendingPathComponent("Contents.json")!, atomically: true)
-        }
+        self.isProcesing = false
     }
     
     func dragViewEntered(dragView: DragView) {
