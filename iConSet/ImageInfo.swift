@@ -33,7 +33,7 @@ class ImageInfo: NSObject {
         self.named = named
         self.scale = scale
         self.imageSize = imageSize
-        self.type = isJPGType ? .JPEG2000 : .PNG
+        self.type = isJPG ? .JPEG2000 : .PNG
         self.jpgComresionValue = jpgComresion
         self.originalImage = image
         

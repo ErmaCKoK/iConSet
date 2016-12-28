@@ -40,6 +40,13 @@ class ViewController: NSViewController, DragViewDelegate {
             return
         }
         
+        var saveFolder = folder
+        
+        if self.isCreateImageAssests {
+            saveFolder = saveFolder.appendingPathComponent("\(URL.name).imageset")
+            try! FileManager.default.createDirectory(at: saveFolder, withIntermediateDirectories: true, attributes: nil)
+        }
+        
         let scale = URL.scale
         let originalSize = BitmapImageSize(width: imageSize.width/scale, height: imageSize.height/scale)
         
@@ -53,9 +60,23 @@ class ViewController: NSViewController, DragViewDelegate {
         
         NSLog("self.isJPGResult \(self.isJPGResult) self.jpgComresionValue: \(self.jpgComresionValue) isCreateImageAssests: \(isCreateImageAssests)")
         
+        var json = [String: Any]()
+        
+        json["images"] = [Any]()
+        
         for imageInfo in imagesInfo {
             let data = imageInfo.data()
-            try? data?.write(to: folder.appendingPathComponent(imageInfo.name), options: [.atomic])
+            try? data?.write(to: saveFolder.appendingPathComponent(imageInfo.name), options: [.atomic])
+            
+            if var array = json["images"] as? [Any] {
+                array.append(["idiom" : "universal", "filename" : imageInfo.name, "scale" : "\(imageInfo.scale)x"])
+                json["images"] = array
+            }
+        }
+        
+        if self.isCreateImageAssests {
+            json["info"] = ["version" : (1), "author" : "xcode"]
+            self.saveJSONAssests(json: json, to: saveFolder)
         }
     }
     
@@ -81,9 +102,14 @@ class ViewController: NSViewController, DragViewDelegate {
         return assetFolder
     }
     
+    func saveJSONAssests(json: [String: Any], to folder: URL) {
+        let date = try! JSONSerialization.data(withJSONObject: json, options: JSONSerialization.WritingOptions.prettyPrinted)
+        try! date.write(to: folder.appendingPathComponent("Contents.json"), options: [.atomic])
+    }
+    
     // MARK: DragView Delegate
     func dragView(_ dragView: DragView, didReciveURLs urls: [URL]) {
-        if self.isProcesing == true && urls.count > 0{
+        if self.isProcesing == true && urls.count > 0 {
             return
         }
         
@@ -98,6 +124,11 @@ class ViewController: NSViewController, DragViewDelegate {
         for url in urls {
             NSLog("didReciveURL \(url.lastPathComponent)")
             self.saveImage(by: url, to: folder)
+        }
+        
+        if self.isCreateImageAssests && urls.count > 1 {
+            let dic = [ "info" : ["version" : (1), "author" : "xcode"]]
+            self.saveJSONAssests(json: dic, to: folder)
         }
         
 //        if let folder = self.folder {
