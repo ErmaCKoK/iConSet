@@ -11,7 +11,7 @@ import Cocoa
 class ImageInfo: NSObject {
     
     private var folder: String
-    private var URL: NSURL
+    private var URL: Foundation.URL
     private var imageSize: BitmapImageSize
     private var isJPG: Bool
     
@@ -23,19 +23,17 @@ class ImageInfo: NSObject {
         }
     }
     
-    var path: NSURL {
-        get {
-            let folder = self.URL.URLByDeletingLastPathComponent!
-            
-            let fileName = self.URL.name//.componentsSeparatedByString("_").last ?? "UNKNOW"
-            
-            let pref = scale == 1 ? "" : "@\(scale)x"
-            let typeFyle = self.isJPG ? "jpg" :"png"
-            return folder.URLByAppendingPathComponent(self.folder)!.URLByAppendingPathComponent("\(fileName)\(pref).\(typeFyle)")!
-        }
+    var path: Foundation.URL {
+        let folder = self.URL.deletingLastPathComponent()
+        
+        let fileName = self.URL.name//.componentsSeparatedByString("_").last ?? "UNKNOW"
+        
+        let pref = scale == 1 ? "" : "@\(scale)x"
+        let typeFyle = self.isJPG ? "jpg" :"png"
+        return folder.appendingPathComponent(self.folder).appendingPathComponent("\(fileName)\(pref).\(typeFyle)")
     }
     
-    init(URL: NSURL, scale: Int, imageSize: BitmapImageSize, folder: String, isJPG: Bool) {
+    init(URL: Foundation.URL, scale: Int, imageSize: BitmapImageSize, folder: String, isJPG: Bool) {
         
         self.URL = URL
         self.scale = scale
@@ -46,7 +44,7 @@ class ImageInfo: NSObject {
         super.init()
     }
     
-    func drawImage(image: NSImage) -> NSImage {
+    func drawImage(_ image: NSImage) -> NSImage {
         
         let size = NSSize(width: self.size.width, height: self.size.height)
         let sourceImage = image;
@@ -59,9 +57,9 @@ class ImageInfo: NSObject {
         rect.size = size
         
         sourceImage.size = size
-        NSGraphicsContext.currentContext()?.imageInterpolation = NSImageInterpolation.High
+        NSGraphicsContext.current()?.imageInterpolation = NSImageInterpolation.high
         
-        sourceImage.drawInRect(rect, fromRect: NSZeroRect, operation: NSCompositingOperation.Copy, fraction: 1.0)
+        sourceImage.draw(in: rect, from: NSZeroRect, operation: NSCompositingOperation.copy, fraction: 1.0)
         
         //        [sourceImage drawAtPoint:NSZeroPoint fromRect:CGRectMake(0, 0, newSize.width, newSize.height) operation:NSCompositeCopy fraction:1.0];
         //        [smallImage unlockFocus];

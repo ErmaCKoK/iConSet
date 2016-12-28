@@ -28,27 +28,27 @@ struct BitmapImageSize {
 
 extension NSBitmapImageRep {
     
-    class func imageRepWithPixelSize(pixelSize: BitmapImageSize) -> NSBitmapImageRep? {
+    class func imageRepWithPixelSize(_ pixelSize: BitmapImageSize) -> NSBitmapImageRep? {
         return NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: pixelSize.width, pixelsHigh: pixelSize.height, bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: NSCalibratedRGBColorSpace, bytesPerRow: 0, bitsPerPixel: 0)
     }
     
-    func setImage(anImage: NSImage, quality: CGInterpolationQuality) {
+    func setImage(_ anImage: NSImage, quality: CGInterpolationQuality) {
         
         let w = self.pixelsWide
         let h = self.pixelsHigh
         let bpr = self.bytesPerRow
         let bps = self.bitsPerSample
         
-        let cgImage = anImage.CGImageForProposedRect(nil, context:nil, hints:nil)
-        let context = CGBitmapContextCreate(self.bitmapData, w, h, bps, bpr,  self.colorSpace.CGColorSpace!, CGImageAlphaInfo.PremultipliedLast.rawValue)
+        let cgImage = anImage.cgImage(forProposedRect: nil, context:nil, hints:nil)
+        let context = CGContext(data: self.bitmapData, width: w, height: h, bitsPerComponent: bps, bytesPerRow: bpr,  space: self.colorSpace.cgColorSpace!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
         //Considers CG's interpolation algorithms.
-        CGContextSetInterpolationQuality(context!, quality);
+        context!.interpolationQuality = quality;
         
-        CGContextDrawImage(context!, CGRectMake(0, 0, CGFloat(w), CGFloat(h)), cgImage!);
+        context!.draw(cgImage!, in: CGRect(x: 0, y: 0, width: CGFloat(w), height: CGFloat(h)));
     }
     
-    class func sizeImageByURL(URL: NSURL) -> BitmapImageSize? {
-        if let imageReps = NSBitmapImageRep.imageRepsWithContentsOfURL(URL) {
+    class func sizeImageByURL(_ URL: Foundation.URL) -> BitmapImageSize? {
+        if let imageReps = NSBitmapImageRep.imageReps(withContentsOf: URL) {
             
             var width = 0;
             var height = 0;

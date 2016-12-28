@@ -8,28 +8,22 @@
 
 import Cocoa
 
-extension NSURL {
+extension URL {
 
     private var wholeName: String? {
-        get {
-            return self.lastPathComponent?.componentsSeparatedByString(".").first
-        }
+        return self.lastPathComponent.components(separatedBy: ".").first
     }
     
     var name: String! {
-        get {
-            return self.wholeName?.componentsSeparatedByString("@").first
-        }
+        return self.wholeName?.components(separatedBy: "@").first
     }
     
     var scale: Int? {
-        get {
-            var prefix = self.wholeName?.componentsSeparatedByString("@").last
-            prefix = prefix?.stringByReplacingOccurrencesOfString("x", withString: "").stringByReplacingOccurrencesOfString("X", withString: "")
-            if let p = prefix {
-                return Int(p)
-            }
-            return nil
+        var prefix = self.wholeName?.components(separatedBy: "@").last
+        prefix = prefix?.replacingOccurrences(of: "x", with: "").replacingOccurrences(of: "X", with: "")
+        if let p = prefix {
+            return Int(p)
         }
+        return nil
     }
 }

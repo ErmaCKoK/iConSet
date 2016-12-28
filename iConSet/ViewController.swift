@@ -20,7 +20,7 @@ class ViewController: NSViewController, DragViewDelegate {
     var jpgComresionValue: NSNumber = (1.0)
     
     var info = [String: String]()
-    var folder: NSURL?
+    var folder: URL?
     
     dynamic var isProcesing: Bool = false
     
@@ -31,28 +31,22 @@ class ViewController: NSViewController, DragViewDelegate {
         
         NSLog("isCreateImageAssests: \(self.isCreateImageAssests) isJPGResult:  \(self.isJPGResult)")
     }
-    
-    override var representedObject: AnyObject? {
-        didSet {
-        // Update the view, if already loaded.
-        }
-    }
 
-    func saveImagesBy(URL :NSURL) {
+    func saveImagesBy(_ URL :Foundation.URL) {
 
-        let directory = URL.URLByDeletingLastPathComponent!
+        let directory = URL.deletingLastPathComponent()
         
         
         let folderName = "Scale"
-        let assetFolde = directory.URLByAppendingPathComponent(folderName)
+        let assetFolde = directory.appendingPathComponent(folderName)
         
         
-        try! NSFileManager.defaultManager().createDirectoryAtURL(assetFolde!, withIntermediateDirectories: true, attributes: nil)
+        try! FileManager.default.createDirectory(at: assetFolde, withIntermediateDirectories: true, attributes: nil)
         
         self.folder = assetFolde
         
         
-        if let image = NSImage(contentsOfURL: URL),
+        if let image = NSImage(contentsOf: URL),
             let imageSize = NSBitmapImageRep.sizeImageByURL(URL){
 
             let scale = URL.scale ?? 1
@@ -67,24 +61,24 @@ class ViewController: NSViewController, DragViewDelegate {
             }
 
             var fileType = NSBitmapImageFileType.PNG
-            var properties = [NSImageInterlaced : NSNumber(bool: false)]
+            var properties = [NSImageInterlaced : NSNumber(value: false)]
             
             if self.isJPGResult == true {
                 fileType = .JPEG2000
-                properties = [NSImageProgressive : NSNumber(bool: false), NSImageCompressionFactor: self.jpgComresionValue]
+                properties = [NSImageProgressive : NSNumber(value: false), NSImageCompressionFactor: self.jpgComresionValue]
             }
             NSLog("self.isJPGResult \(self.isJPGResult) type: \(fileType) properties: \(properties)")
             for imageInfo in imagesInfo {
                 
                 let newImage = imageInfo.drawImage(image)
 
-                let targetColorSpace = NSColorSpace(CGColorSpace: CGColorSpaceCreateWithName(kCGColorSpaceSRGB)!)!
+                let targetColorSpace = NSColorSpace(cgColorSpace: CGColorSpace(name: CGColorSpace.sRGB)!)!
                 
-                let imageRepNew = NSBitmapImageRep(data: newImage.TIFFRepresentation!)?.bitmapImageRepByRetaggingWithColorSpace(targetColorSpace)
+                let imageRepNew = NSBitmapImageRep(data: newImage.tiffRepresentation!)?.retagging(with: targetColorSpace)
                 
-                let imageData = imageRepNew!.representationUsingType(fileType, properties: properties)
+                let imageData = imageRepNew!.representation(using: fileType, properties: properties)
                 
-                imageData?.writeToURL(imageInfo.path, atomically: true)
+                try? imageData?.write(to: imageInfo.path, options: [.atomic])
             }
             
         }
@@ -92,12 +86,12 @@ class ViewController: NSViewController, DragViewDelegate {
     }
     
     // MARK: DragView Delegate
-    func dragView(dragView: DragView, didReciveURL url: NSURL) {
+    func dragView(_ dragView: DragView, didReciveURL url: URL) {
         NSLog("didReciveURL \(url.lastPathComponent)")
         self.saveImagesBy(url)
     }
     
-    func dragView(dragView: DragView, didReciveURLs urls: [NSURL]) {
+    func dragView(_ dragView: DragView, didReciveURLs urls: [URL]) {
         if self.isProcesing == true {
             return
         }
@@ -121,11 +115,11 @@ class ViewController: NSViewController, DragViewDelegate {
         self.isProcesing = false
     }
     
-    func dragViewEntered(dragView: DragView) {
+    func dragViewEntered(_ dragView: DragView) {
         self.imageView.image = NSImage(named: "ic_drag_selected")
     }
     
-    func dragViewExited(dragView: DragView) {
+    func dragViewExited(_ dragView: DragView) {
         self.imageView.image = NSImage(named: "ic_drag")
     }
 

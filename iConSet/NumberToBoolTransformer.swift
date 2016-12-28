@@ -8,19 +8,19 @@
 
 import Cocoa
 
-class NumberToBoolTransformer: NSValueTransformer {
+class NumberToBoolTransformer: ValueTransformer {
     
     override class func transformedValueClass() -> AnyClass {
         return NSNumber.self
     }
     
-    override func transformedValue(value: AnyObject?) -> AnyObject? {
+    override func transformedValue(_ value: Any?) -> Any? {
         if let number = value as? NSNumber {
             return number.boolValue
         }
         
         if let boolValue = value as? Bool {
-            return NSNumber(bool: boolValue)
+            return NSNumber(value: boolValue)
         }
         
         return nil

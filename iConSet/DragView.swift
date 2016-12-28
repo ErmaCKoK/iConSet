@@ -10,10 +10,10 @@ import Cocoa
 
 @objc protocol DragViewDelegate {
     
-    optional func dragViewEntered(dragView:DragView)
-    optional func dragViewExited(dragView:DragView)
-    func dragView(dragView:DragView, didReciveURL url: NSURL)
-    func dragView(dragView:DragView, didReciveURLs urls: [NSURL])
+    @objc optional func dragViewEntered(_ dragView:DragView)
+    @objc optional func dragViewExited(_ dragView:DragView)
+    func dragView(_ dragView:DragView, didReciveURL url: URL)
+    func dragView(_ dragView:DragView, didReciveURLs urls: [URL])
     
 }
 
@@ -24,39 +24,40 @@ class DragView: NSView {
     required init?(coder: NSCoder) {
         super.init(coder: coder)
 
-        self.registerForDraggedTypes([NSFilenamesPboardType])
+        self.register(forDraggedTypes: [NSFilenamesPboardType])
     }
     
     // MARK: - Destination Operations
-    override func draggingEntered(sender: NSDraggingInfo) -> NSDragOperation {
+    override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
         
-       if NSImage.canInitWithPasteboard(sender.draggingPasteboard()) == true {
-            let fileURL = NSURL(fromPasteboard: sender.draggingPasteboard())
+       if NSImage.canInit(with: sender.draggingPasteboard()) == true {
+        
+            let fileURL = NSURL(from: sender.draggingPasteboard()) as? URL
             
 //            NSLog("test: \(fileURL?.lastPathComponent)")
             
-            if fileURL?.lastPathComponent?.hasSuffix(".png") == true ||
-                fileURL?.lastPathComponent?.hasSuffix(".jpg") == true ||
-                fileURL?.lastPathComponent?.hasSuffix(".jpeg") == true {
+            if fileURL?.lastPathComponent.hasSuffix(".png") == true ||
+                fileURL?.lastPathComponent.hasSuffix(".jpg") == true ||
+                fileURL?.lastPathComponent.hasSuffix(".jpeg") == true {
                 self.delegate?.dragViewEntered?(self)
-                return .Copy
+                return .copy
             }
        }
         
-        return .None
+        return NSDragOperation()
     }
     
-    override func draggingExited(sender: NSDraggingInfo?) {
+    override func draggingExited(_ sender: NSDraggingInfo?) {
         self.delegate?.dragViewExited?(self)
 
     }
     
-    override func prepareForDragOperation(sender: NSDraggingInfo) -> Bool {
+    override func prepareForDragOperation(_ sender: NSDraggingInfo) -> Bool {
         
         return true//NSImage.canInitWithPasteboard(sender.draggingPasteboard())
     }
     
-    override func performDragOperation(sender: NSDraggingInfo) -> Bool {
+    override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
 
         self.delegate?.dragViewExited?(self)
         
@@ -65,7 +66,7 @@ class DragView: NSView {
        // }
         
         if sender.draggingPasteboard().types?.contains(NSURLPboardType) == true {
-            if let urls = sender.draggingPasteboard().readObjectsForClasses([NSURL.self], options: nil) as? [NSURL] {
+            if let urls = sender.draggingPasteboard().readObjects(forClasses: [NSURL.self], options: nil) as? [URL] {
                 self.delegate?.dragView(self, didReciveURLs: urls)
             }
         }
