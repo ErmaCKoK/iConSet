@@ -32,78 +32,72 @@ class ViewController: NSViewController, DragViewDelegate {
         NSLog("isCreateImageAssests: \(self.isCreateImageAssests) isJPGResult:  \(self.isJPGResult)")
     }
 
-    func saveImagesBy(_ URL :Foundation.URL) {
-
-        let directory = URL.deletingLastPathComponent()
+    func saveImage(by URL: URL, to folder: URL) {
+        
+        guard let image = NSImage(contentsOf: URL),
+              let imageSize = NSBitmapImageRep.sizeImage(by: URL)
+        else {
+            return
+        }
+        
+        let scale = URL.scale
+        let originalSize = BitmapImageSize(width: imageSize.width/scale, height: imageSize.height/scale)
+        
+        var imagesInfo = [ImageInfo]()
+        
+        self.info[URL.name] = "\(originalSize.width):\(originalSize.height)"
+        
+        for index in 1...3 {
+            imagesInfo.append(ImageInfo(image: image, named: URL.name, scale: index, imageSize: originalSize, isJPG: self.isJPGResult, jpgComresion: self.jpgComresionValue))
+        }
+        
+        NSLog("self.isJPGResult \(self.isJPGResult) self.jpgComresionValue: \(self.jpgComresionValue) isCreateImageAssests: \(isCreateImageAssests)")
+        
+        for imageInfo in imagesInfo {
+            let data = imageInfo.data()
+            try? data?.write(to: folder.appendingPathComponent(imageInfo.name), options: [.atomic])
+        }
+    }
+    
+    func folderToSave(from: URL) -> URL {
+        
+        let directory = from.deletingLastPathComponent()
         
         
         let folderName = "Scale"
-        let assetFolde = directory.appendingPathComponent(folderName)
+        var assetFolder: URL!
         
-        
-        try! FileManager.default.createDirectory(at: assetFolde, withIntermediateDirectories: true, attributes: nil)
-        
-        self.folder = assetFolde
-        
-        
-        if let image = NSImage(contentsOf: URL),
-            let imageSize = NSBitmapImageRep.sizeImageByURL(URL){
-
-            let scale = URL.scale ?? 1
-            let originalSize = BitmapImageSize(width: imageSize.width/scale, height: imageSize.height/scale)
-            
-            var imagesInfo = [ImageInfo]()
-            
-            self.info[URL.name] = "\(originalSize.width):\(originalSize.height)"
-            
-            for index in 1...3 {
-                imagesInfo.append(ImageInfo(URL: URL, scale: index, imageSize: originalSize, folder: folderName, isJPG: self.isJPGResult))
-            }
-
-            var fileType = NSBitmapImageFileType.PNG
-            var properties = [NSImageInterlaced : NSNumber(value: false)]
-            
-            if self.isJPGResult == true {
-                fileType = .JPEG2000
-                properties = [NSImageProgressive : NSNumber(value: false), NSImageCompressionFactor: self.jpgComresionValue]
-            }
-            NSLog("self.isJPGResult \(self.isJPGResult) type: \(fileType) properties: \(properties)")
-            for imageInfo in imagesInfo {
-                
-                let newImage = imageInfo.drawImage(image)
-
-                let targetColorSpace = NSColorSpace(cgColorSpace: CGColorSpace(name: CGColorSpace.sRGB)!)!
-                
-                let imageRepNew = NSBitmapImageRep(data: newImage.tiffRepresentation!)?.retagging(with: targetColorSpace)
-                
-                let imageData = imageRepNew!.representation(using: fileType, properties: properties)
-                
-                try? imageData?.write(to: imageInfo.path, options: [.atomic])
-            }
-            
+        var newFolder = false
+        var count = 0
+        while newFolder == false {
+            let sufix = count > 0 ? "-\(count)" : ""
+            assetFolder = directory.appendingPathComponent("\(folderName)\(sufix)")
+            newFolder = !FileManager.default.fileExists(atPath: assetFolder.path)
+            count += 1
         }
         
+        try! FileManager.default.createDirectory(at: assetFolder, withIntermediateDirectories: true, attributes: nil)
+        
+        return assetFolder
     }
     
     // MARK: DragView Delegate
-    func dragView(_ dragView: DragView, didReciveURL url: URL) {
-        NSLog("didReciveURL \(url.lastPathComponent)")
-        self.saveImagesBy(url)
-    }
-    
     func dragView(_ dragView: DragView, didReciveURLs urls: [URL]) {
-        if self.isProcesing == true {
+        if self.isProcesing == true && urls.count > 0{
             return
         }
         
         self.isProcesing = true
 
         self.info.removeAll()
-        self.folder = nil
+        
+        let folder = self.folderToSave(from: urls[0])
+        
+        self.folder = folder
         
         for url in urls {
             NSLog("didReciveURL \(url.lastPathComponent)")
-            self.saveImagesBy(url)
+            self.saveImage(by: url, to: folder)
         }
         
 //        if let folder = self.folder {

@@ -10,44 +10,59 @@ import Cocoa
 
 class ImageInfo: NSObject {
     
-    private var folder: String
-    private var URL: Foundation.URL
+    private var named: String
     private var imageSize: BitmapImageSize
-    private var isJPG: Bool
+    private var type: NSBitmapImageFileType
+    private var jpgComresionValue: NSNumber
+    private var originalImage: NSImage
     
     var scale: Int
     
     var size: BitmapImageSize {
-        get {
-            return BitmapImageSize(width: imageSize.width * scale, height: imageSize.height * scale)
-        }
+        return BitmapImageSize(width: imageSize.width * scale, height: imageSize.height * scale)
     }
     
-    var path: Foundation.URL {
-        let folder = self.URL.deletingLastPathComponent()
-        
-        let fileName = self.URL.name//.componentsSeparatedByString("_").last ?? "UNKNOW"
-        
-        let pref = scale == 1 ? "" : "@\(scale)x"
-        let typeFyle = self.isJPG ? "jpg" :"png"
-        return folder.appendingPathComponent(self.folder).appendingPathComponent("\(fileName)\(pref).\(typeFyle)")
+    var name: String {
+        let pref = scale <= 1 ? "" : "@\(scale)x"
+        let typeFyle = self.type == .PNG ? "png" : "jpg"
+        return "\(named)\(pref).\(typeFyle)"
     }
     
-    init(URL: Foundation.URL, scale: Int, imageSize: BitmapImageSize, folder: String, isJPG: Bool) {
+    init(image: NSImage, named: String, scale: Int, imageSize: BitmapImageSize, isJPG: Bool, jpgComresion: NSNumber) {
         
-        self.URL = URL
+        self.named = named
         self.scale = scale
         self.imageSize = imageSize
-        self.folder = folder
-        self.isJPG = isJPG
+        self.type = isJPGType ? .JPEG2000 : .PNG
+        self.jpgComresionValue = jpgComresion
+        self.originalImage = image
         
         super.init()
     }
     
-    func drawImage(_ image: NSImage) -> NSImage {
+    func data() -> Data? {
+        
+        // draw image
+        let newImage = self.drawImage()
+        
+        // color space
+        let targetColorSpace = NSColorSpace(cgColorSpace: CGColorSpace(name: CGColorSpace.sRGB)!)!
+        let imageRepNew = NSBitmapImageRep(data: newImage.tiffRepresentation!)!.retagging(with: targetColorSpace)!
+        
+        var properties: [String: Any] = [NSImageInterlaced : NSNumber(value: false)]
+        
+        if self.type == .JPEG2000 || self.type == .JPEG {
+            properties[NSImageCompressionFactor] = self.jpgComresionValue
+        }
+        
+        // image representation to data
+        return imageRepNew.representation(using: self.type, properties: properties)
+    }
+    
+    func drawImage() -> NSImage {
         
         let size = NSSize(width: self.size.width, height: self.size.height)
-        let sourceImage = image;
+        let sourceImage = self.originalImage
         
         let newImage = NSImage(size: size) //[[NSImage alloc] initWithSize:targetSize];
         newImage.lockFocus()
@@ -69,7 +84,6 @@ class ImageInfo: NSObject {
         newImage.unlockFocus()
         
         return newImage//[newImage autorelease];
-        
     }
     
     

@@ -47,7 +47,7 @@ extension NSBitmapImageRep {
         context!.draw(cgImage!, in: CGRect(x: 0, y: 0, width: CGFloat(w), height: CGFloat(h)));
     }
     
-    class func sizeImageByURL(_ URL: Foundation.URL) -> BitmapImageSize? {
+    class func sizeImage(by URL: URL) -> BitmapImageSize? {
         if let imageReps = NSBitmapImageRep.imageReps(withContentsOf: URL) {
             
             var width = 0;

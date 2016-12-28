@@ -12,7 +12,6 @@ import Cocoa
     
     @objc optional func dragViewEntered(_ dragView:DragView)
     @objc optional func dragViewExited(_ dragView:DragView)
-    func dragView(_ dragView:DragView, didReciveURL url: URL)
     func dragView(_ dragView:DragView, didReciveURLs urls: [URL])
     
 }
