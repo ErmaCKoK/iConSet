@@ -17,6 +17,7 @@ class ViewController: NSViewController, DragViewDelegate {
     
     var isDetectScale: Bool = false
     var isJPGResult: Bool = false
+    var isResize: Bool = true
     var jpgComresionValue: NSNumber = (1.0)
     
     var info = [String: String]()
@@ -34,11 +35,10 @@ class ViewController: NSViewController, DragViewDelegate {
 
     func saveImage(by URL: URL, to folder: URL) {
         
-        guard let image = NSImage(contentsOf: URL),
-              let imageSize = NSBitmapImageRep.sizeImage(by: URL)
-        else {
-            return
-        }
+        let scales = (1...3)
+        let imagesInfo = scales.flatMap({ ImageInfo(url: URL, scale: $0, jpgComresion:  self.isJPGResult ? self.jpgComresionValue : nil) })
+        
+        guard imagesInfo.count > 0 else { return }
         
         var saveFolder = folder
         
@@ -47,36 +47,19 @@ class ViewController: NSViewController, DragViewDelegate {
             try! FileManager.default.createDirectory(at: saveFolder, withIntermediateDirectories: true, attributes: nil)
         }
         
-        let scale = URL.scale
-        let originalSize = BitmapImageSize(width: imageSize.width/scale, height: imageSize.height/scale)
-        
-        var imagesInfo = [ImageInfo]()
-        
-        self.info[URL.name] = "\(originalSize.width):\(originalSize.height)"
-        
-        for index in 1...3 {
-            imagesInfo.append(ImageInfo(image: image, named: URL.name, scale: index, imageSize: originalSize, isJPG: self.isJPGResult, jpgComresion: self.jpgComresionValue))
-        }
-        
         NSLog("self.isJPGResult \(self.isJPGResult) self.jpgComresionValue: \(self.jpgComresionValue) isCreateImageAssests: \(isCreateImageAssests)")
         
-        var json = [String: Any]()
-        
-        json["images"] = [Any]()
-        
+        let assetsJSON = AssestsJSON()
+
         for imageInfo in imagesInfo {
             let data = imageInfo.data()
             try? data?.write(to: saveFolder.appendingPathComponent(imageInfo.name), options: [.atomic])
             
-            if var array = json["images"] as? [Any] {
-                array.append(["idiom" : "universal", "filename" : imageInfo.name, "scale" : "\(imageInfo.scale)x"])
-                json["images"] = array
-            }
+            assetsJSON.append(imageInfo)
         }
         
         if self.isCreateImageAssests {
-            json["info"] = ["version" : (1), "author" : "xcode"]
-            self.saveJSONAssests(json: json, to: saveFolder)
+            assetsJSON.save(to: saveFolder)
         }
     }
     
@@ -102,11 +85,6 @@ class ViewController: NSViewController, DragViewDelegate {
         return assetFolder
     }
     
-    func saveJSONAssests(json: [String: Any], to folder: URL) {
-        let date = try! JSONSerialization.data(withJSONObject: json, options: JSONSerialization.WritingOptions.prettyPrinted)
-        try! date.write(to: folder.appendingPathComponent("Contents.json"), options: [.atomic])
-    }
-    
     // MARK: DragView Delegate
     func dragView(_ dragView: DragView, didReciveURLs urls: [URL]) {
         if self.isProcesing == true && urls.count > 0 {
@@ -127,8 +105,7 @@ class ViewController: NSViewController, DragViewDelegate {
         }
         
         if self.isCreateImageAssests && urls.count > 1 {
-            let dic = [ "info" : ["version" : (1), "author" : "xcode"]]
-            self.saveJSONAssests(json: dic, to: folder)
+            AssestsJSON().save(to: folder)
         }
         
 //        if let folder = self.folder {

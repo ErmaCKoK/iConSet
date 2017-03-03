@@ -13,8 +13,11 @@ class ImageInfo: NSObject {
     private var named: String
     private var imageSize: BitmapImageSize
     private var type: NSBitmapImageFileType
-    private var jpgComresionValue: NSNumber
+    
+    private var jpgComresionValue: NSNumber?
+    
     private var originalImage: NSImage
+    private var originalSize: BitmapImageSize
     
     var scale: Int
     
@@ -28,14 +31,22 @@ class ImageInfo: NSObject {
         return "\(named)\(pref).\(typeFyle)"
     }
     
-    init(image: NSImage, named: String, scale: Int, imageSize: BitmapImageSize, isJPG: Bool, jpgComresion: NSNumber) {
+    init?(url: URL, scale: Int, jpgComresion: NSNumber? = nil) {
         
-        self.named = named
+        guard let originalImage = NSImage(contentsOf: url), let originalSize = NSBitmapImageRep.sizeImage(by: url) else { return nil }
+        
+        self.named = url.name
+        
+        self.originalImage = originalImage
+        self.originalSize = originalSize
+        
+        let originalScale = url.scale
+        self.imageSize = BitmapImageSize(width: self.originalSize.width/originalScale, height: self.originalSize.height/originalScale)
+        
         self.scale = scale
-        self.imageSize = imageSize
-        self.type = isJPG ? .JPEG2000 : .PNG
+        
+        self.type = jpgComresion != nil ? .JPEG2000 : .PNG
         self.jpgComresionValue = jpgComresion
-        self.originalImage = image
         
         super.init()
     }
@@ -68,8 +79,11 @@ class ImageInfo: NSObject {
         newImage.lockFocus()
         
         var rect = NSRect()
-        
         rect.size = size
+        
+//        //fill the new image with white...
+//        [[NSColor whiteColor] setFill];
+//        [NSBezierPath fillRect:NSMakeRect(0, 0, imageSize.width, imageSize.height)];
         
         sourceImage.size = size
         NSGraphicsContext.current()?.imageInterpolation = NSImageInterpolation.high
