@@ -10,7 +10,7 @@ import Cocoa
 
 class ImageInfo: NSObject {
     
-    private var named: String
+    private(set) var originalUrl: URL
     private var imageSize: BitmapImageSize
     private var type: NSBitmapImageFileType
     
@@ -28,14 +28,14 @@ class ImageInfo: NSObject {
     var name: String {
         let pref = scale <= 1 ? "" : "@\(scale)x"
         let typeFyle = self.type == .PNG ? "png" : "jpg"
-        return "\(named)\(pref).\(typeFyle)"
+        return "\(self.originalUrl.name)\(pref).\(typeFyle)"
     }
     
     init?(url: URL, scale: Int, jpgComresion: NSNumber? = nil) {
         
         guard let originalImage = NSImage(contentsOf: url), let originalSize = NSBitmapImageRep.sizeImage(by: url) else { return nil }
         
-        self.named = url.name
+        self.originalUrl = url
         
         self.originalImage = originalImage
         self.originalSize = originalSize

@@ -10,31 +10,44 @@ import Cocoa
 
 class AssestsJSON: NSObject {
     
-    var json: [String: Any]
+    var imageInfos = [ImageInfo]()
+    
+    convenience init(imageInfos: [ImageInfo]) {
+        self.init()
+        self.imageInfos = imageInfos
+    }
     
     override init() {
-        self.json = [String: Any]()
         super.init()
     }
     
     func append(_ imageInfo: ImageInfo) {
-        var images: [Any]
-        
-        if let array = json["images"] as? [Any] {
-            images = array
-        } else {
-            images = [Any]()
-        }
-        
-        images.append(["idiom" : "universal", "filename" : imageInfo.name, "scale" : "\(imageInfo.scale)x"])
-        json["images"] = images
+        self.imageInfos.append(imageInfo)
     }
     
     func save(to folder: URL) {
         
+        var json = [String: Any]()
+        
+        var images = [Any]()
+        for index in (1...3) {
+            
+            var dic = ["idiom" : "universal", "scale" : "\(index)x"]
+            
+            if let imageInfo = self.imageInfos.first(where: { $0.scale == index }) {
+                dic["filename"] = imageInfo.name
+            }
+            
+            images.append(dic)
+        }
+        
+        if images.count > 0 {
+            json["images"] = images
+        }
+        
         json["info"] = ["version" : (1), "author" : "xcode"]
         
-        let date = try! JSONSerialization.data(withJSONObject: self.json, options: JSONSerialization.WritingOptions.prettyPrinted)
+        let date = try! JSONSerialization.data(withJSONObject: json, options: JSONSerialization.WritingOptions.prettyPrinted)
         try! date.write(to: folder.appendingPathComponent("Contents.json"), options: [.atomic])
     }
     

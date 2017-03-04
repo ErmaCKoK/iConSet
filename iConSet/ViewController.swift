@@ -33,17 +33,16 @@ class ViewController: NSViewController, DragViewDelegate {
         NSLog("isCreateImageAssests: \(self.isCreateImageAssests) isJPGResult:  \(self.isJPGResult)")
     }
 
-    func saveImage(by URL: URL, to folder: URL) {
+    func draw(imageInfos: [ImageInfo], saveTo folder: URL) {
         
-        let scales = (1...3)
-        let imagesInfo = scales.flatMap({ ImageInfo(url: URL, scale: $0, jpgComresion:  self.isJPGResult ? self.jpgComresionValue : nil) })
-        
-        guard imagesInfo.count > 0 else { return }
+        guard imageInfos.count > 0 else { return }
         
         var saveFolder = folder
         
+        let name = imageInfos.first!.originalUrl.name
+        
         if self.isCreateImageAssests {
-            saveFolder = saveFolder.appendingPathComponent("\(URL.name).imageset")
+            saveFolder = saveFolder.appendingPathComponent("\(name).imageset")
             try! FileManager.default.createDirectory(at: saveFolder, withIntermediateDirectories: true, attributes: nil)
         }
         
@@ -51,9 +50,14 @@ class ViewController: NSViewController, DragViewDelegate {
         
         let assetsJSON = AssestsJSON()
 
-        for imageInfo in imagesInfo {
-            let data = imageInfo.data()
-            try? data?.write(to: saveFolder.appendingPathComponent(imageInfo.name), options: [.atomic])
+        for imageInfo in imageInfos {
+            
+            if self.isResize {
+                let data = imageInfo.data()
+                try? data?.write(to: saveFolder.appendingPathComponent(imageInfo.name), options: [.atomic])
+            } else {
+                _ = try! FileManager.default.copyItem(at: imageInfo.originalUrl, to: saveFolder.appendingPathComponent(imageInfo.name))
+            }
             
             assetsJSON.append(imageInfo)
         }
@@ -99,12 +103,38 @@ class ViewController: NSViewController, DragViewDelegate {
         
         self.folder = folder
         
+        var assestsURL = [String: [URL]]()
         for url in urls {
             NSLog("didReciveURL \(url.lastPathComponent)")
-            self.saveImage(by: url, to: folder)
+            var urls: [URL]
+            
+            if let oldURLs = assestsURL[url.name] {
+                urls = oldURLs
+            } else {
+                urls = [URL]()
+            }
+            urls.append(url)
+            urls.sort(by: { $0.scale < $1.scale })
+            assestsURL[url.name] = urls
         }
         
-        if self.isCreateImageAssests && urls.count > 1 {
+        for (_, urls) in assestsURL where urls.count > 0 {
+            
+            let imageInfos: [ImageInfo]
+            
+            if self.isResize {
+                
+                let lastURL = urls.last!
+                let scales = (1...3)
+                imageInfos = scales.flatMap({ ImageInfo(url: lastURL, scale: $0, jpgComresion:  self.isJPGResult ? self.jpgComresionValue : nil) })
+            } else {
+                imageInfos = urls.flatMap({ ImageInfo(url: $0, scale: $0.scale, jpgComresion: nil) })
+            }
+            
+            self.draw(imageInfos: imageInfos, saveTo: folder)
+        }
+        
+        if self.isCreateImageAssests && assestsURL.count > 1 {
             AssestsJSON().save(to: folder)
         }
         
