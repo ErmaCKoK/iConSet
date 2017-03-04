@@ -39,7 +39,7 @@ class ViewController: NSViewController, DragViewDelegate {
         
         var saveFolder = folder
         
-        let name = imageInfos.first!.originalUrl.name
+        let name = imageInfos.first!.originName
         
         if self.isCreateImageAssests {
             saveFolder = saveFolder.appendingPathComponent("\(name).imageset")

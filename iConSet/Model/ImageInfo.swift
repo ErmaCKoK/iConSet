@@ -31,6 +31,10 @@ class ImageInfo: NSObject {
         return "\(self.originalUrl.name)\(pref).\(typeFyle)"
     }
     
+    var originName: String {
+        return self.originalUrl.name
+    }
+    
     init?(url: URL, scale: Int, jpgComresion: NSNumber? = nil) {
         
         guard let originalImage = NSImage(contentsOf: url), let originalSize = NSBitmapImageRep.sizeImage(by: url) else { return nil }
